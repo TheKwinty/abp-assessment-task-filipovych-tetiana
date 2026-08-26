@@ -1,0 +1,25 @@
+# Build and IDE output
+**/bin/
+**/obj/
+.vs/
+.idea/
+*.user
+*.suo
+
+# Test and generated artifacts
+TestResults/
+coverage/
+artifacts/
+/docs/
+/tmp/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.local.json
+
+# Operating-system files
+.DS_Store
+Thumbs.db
