@@ -1,0 +1,92 @@
+@ConferenceRoomsApi_HostAddress = https://localhost:7284
+@hallAId = 11111111-1111-1111-1111-111111111111
+@unknownHallId = 99999999-9999-9999-9999-999999999999
+
+# Replace this value with the Hall ID returned by the POST request.
+@createdHallId = 00000000-0000-0000-0000-000000000000
+
+### List halls
+# Expected: 200 OK
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls
+Accept: application/json
+
+### Get seeded Hall A
+# Expected: 200 OK
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{hallAId}}
+Accept: application/json
+
+### Get an unknown Hall
+# Expected: 404 Not Found
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{unknownHallId}}
+Accept: application/json
+
+### Create a Hall
+# Expected: 201 Created. Copy the returned ID into @createdHallId above.
+POST {{ConferenceRoomsApi_HostAddress}}/api/halls
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Manual Test Hall",
+  "capacity": 25,
+  "baseHourlyRate": 1200.00,
+  "services": [
+    {
+      "name": "Projector",
+      "price": 450.00
+    },
+    {
+      "name": "Coffee service",
+      "price": 250.00
+    }
+  ]
+}
+
+### Get the created Hall
+# Expected: 200 OK after replacing @createdHallId with the POST response ID.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
+Accept: application/json
+
+### Replace the created Hall details and services
+# Expected: 204 No Content
+PUT {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
+Content-Type: application/json
+
+{
+  "name": "Manual Test Hall Updated",
+  "capacity": 35,
+  "baseHourlyRate": 1500.00,
+  "services": [
+    {
+      "name": "Sound",
+      "price": 600.00
+    }
+  ]
+}
+
+### Get the updated Hall
+# Expected: 200 OK with the updated state
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
+Accept: application/json
+
+### Submit an invalid Hall
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/halls
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "   ",
+  "capacity": 0,
+  "baseHourlyRate": 10.123,
+  "services": null
+}
+
+### Delete the created Hall
+# Expected: 204 No Content
+DELETE {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
+
+### Confirm the created Hall was deleted
+# Expected: 404 Not Found
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
+Accept: application/json

@@ -1,3 +1,4 @@
+using ConferenceRooms.Api.Services;
 using ConferenceRooms.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ConferenceRoomsDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddScoped<HallService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
