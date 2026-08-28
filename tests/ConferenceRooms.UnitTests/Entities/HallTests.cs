@@ -91,4 +91,119 @@ public sealed class HallTests
 
         Assert.Throws<ArgumentNullException>(() => hall.AddServiceOffering(null!));
     }
+
+    [Fact]
+    public void UpdateDetails_WithValidValues_UpdatesHall()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        hall.UpdateDetails("Hall B", 40, 2500m);
+
+        Assert.Equal("Hall B", hall.Name);
+        Assert.Equal(40, hall.Capacity);
+        Assert.Equal(2500m, hall.BaseHourlyRate);
+    }
+
+    [Fact]
+    public void UpdateDetails_TrimsName()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        hall.UpdateDetails("  Hall B  ", 40, 2500m);
+
+        Assert.Equal("Hall B", hall.Name);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void UpdateDetails_WithInvalidName_ThrowsArgumentException(string? name)
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        Assert.Throws<ArgumentException>(
+            () => hall.UpdateDetails(name!, 40, 2500m));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void UpdateDetails_WithNonPositiveCapacity_ThrowsArgumentOutOfRangeException(int capacity)
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => hall.UpdateDetails("Hall B", capacity, 2500m));
+    }
+
+    [Fact]
+    public void UpdateDetails_WithNegativeBaseHourlyRate_ThrowsArgumentOutOfRangeException()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => hall.UpdateDetails("Hall B", 40, -0.01m));
+    }
+
+    [Fact]
+    public void ReplaceServiceOfferings_WithValidCollection_ReplacesExistingServices()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+        hall.AddServiceOffering(new ServiceOffering(Guid.NewGuid(), "Projector", 400m));
+        hall.AddServiceOffering(new ServiceOffering(Guid.NewGuid(), "Wi-Fi", 200m));
+        var sound = new ServiceOffering(Guid.NewGuid(), "Sound", 600m);
+
+        hall.ReplaceServiceOfferings([sound]);
+
+        Assert.Same(sound, Assert.Single(hall.ServiceOfferings));
+    }
+
+    [Fact]
+    public void ReplaceServiceOfferings_WithEmptyCollection_RemovesAllServices()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+        hall.AddServiceOffering(new ServiceOffering(Guid.NewGuid(), "Projector", 400m));
+
+        hall.ReplaceServiceOfferings([]);
+
+        Assert.Empty(hall.ServiceOfferings);
+    }
+
+    [Fact]
+    public void ReplaceServiceOfferings_WithNullCollection_ThrowsArgumentNullException()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+        var projector = new ServiceOffering(Guid.NewGuid(), "Projector", 400m);
+        hall.AddServiceOffering(projector);
+
+        Assert.Throws<ArgumentNullException>(
+            () => hall.ReplaceServiceOfferings(null!));
+        Assert.Same(projector, Assert.Single(hall.ServiceOfferings));
+    }
+
+    [Fact]
+    public void ReplaceServiceOfferings_WithNullItem_ThrowsArgumentException()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+
+        Assert.Throws<ArgumentException>(
+            () => hall.ReplaceServiceOfferings([null!]));
+    }
+
+    [Fact]
+    public void ReplaceServiceOfferings_WithInvalidCollection_DoesNotModifyExistingServices()
+    {
+        var hall = new Hall(Guid.NewGuid(), "Hall A", 20, 1000m);
+        var projector = new ServiceOffering(Guid.NewGuid(), "Projector", 400m);
+        var wiFi = new ServiceOffering(Guid.NewGuid(), "Wi-Fi", 200m);
+        hall.AddServiceOffering(projector);
+        hall.AddServiceOffering(wiFi);
+        var sound = new ServiceOffering(Guid.NewGuid(), "Sound", 600m);
+
+        Assert.Throws<ArgumentException>(
+            () => hall.ReplaceServiceOfferings([sound, null!]));
+
+        Assert.Equal([projector, wiFi], hall.ServiceOfferings);
+    }
 }
