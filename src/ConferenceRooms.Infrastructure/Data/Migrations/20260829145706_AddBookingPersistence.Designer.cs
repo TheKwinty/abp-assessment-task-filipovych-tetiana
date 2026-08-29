@@ -4,6 +4,7 @@ using ConferenceRooms.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConferenceRooms.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ConferenceRoomsDbContext))]
-    partial class ConferenceRoomsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260829145706_AddBookingPersistence")]
+    partial class AddBookingPersistence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

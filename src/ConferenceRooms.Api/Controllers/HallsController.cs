@@ -67,8 +67,18 @@ public sealed class HallsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var deleted = await _hallService.DeleteAsync(id, cancellationToken);
+        var result = await _hallService.DeleteAsync(id, cancellationToken);
 
-        return deleted ? NoContent() : NotFound();
+        return result switch
+        {
+            HallDeletionResult.Deleted => NoContent(),
+            HallDeletionResult.NotFound => NotFound(),
+            HallDeletionResult.HasBookings => Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Hall cannot be deleted.",
+                detail: "Historical or current bookings reference this Hall."),
+            _ => throw new InvalidOperationException(
+                $"Unsupported Hall deletion result: {result}."),
+        };
     }
 }

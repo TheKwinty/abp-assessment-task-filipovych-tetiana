@@ -15,6 +15,10 @@ public sealed class ConferenceRoomsDbContext : DbContext
 
     public DbSet<ServiceOffering> ServiceOfferings => Set<ServiceOffering>();
 
+    public DbSet<Booking> Bookings => Set<Booking>();
+
+    public DbSet<BookedService> BookedServices => Set<BookedService>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(
