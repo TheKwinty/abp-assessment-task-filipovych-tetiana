@@ -47,6 +47,249 @@ Accept: application/json
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
 Accept: application/json
 
+###############################################################################
+# Booking API
+###############################################################################
+
+@hallBId = 22222222-2222-2222-2222-222222222222
+@hallCId = 33333333-3333-3333-3333-333333333333
+@hallAProjectorId = a0000000-0000-0000-0000-000000000001
+@hallAWiFiId = a0000000-0000-0000-0000-000000000002
+@hallBWiFiId = b0000000-0000-0000-0000-000000000002
+@unknownServiceOfferingId = ffffffff-ffff-ffff-ffff-ffffffffffff
+
+# Replace this value with a Booking ID returned by a successful POST request.
+@createdBookingId = 00000000-0000-0000-0000-000000000000
+
+### Create a booking without services
+# Expected: 201 Created
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-05T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Create a booking with services
+# Expected: 201 Created. Copy the returned ID into @createdBookingId above.
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-05T14:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": [
+    "{{hallAProjectorId}}",
+    "{{hallAWiFiId}}"
+  ]
+}
+
+### Get the created booking confirmation
+# Expected: 200 OK after replacing @createdBookingId.
+GET {{ConferenceRoomsApi_HostAddress}}/api/bookings/{{createdBookingId}}
+Accept: application/json
+
+### Create a booking for a nonexistent Hall
+# Expected: 404 Not Found
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{unknownHallId}}",
+  "start": "2030-09-05T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 10,
+  "serviceOfferingIds": []
+}
+
+### Submit zero attendees
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 0,
+  "serviceOfferingIds": []
+}
+
+### Exceed Hall capacity
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 51,
+  "serviceOfferingIds": []
+}
+
+### Submit a past booking
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2024-09-05T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Submit a booking that is not full-hour aligned
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:30:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Submit a booking before opening time
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T05:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Submit a booking that crosses midnight
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T22:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Submit duplicate service IDs
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": [
+    "{{hallAProjectorId}}",
+    "{{hallAProjectorId}}"
+  ]
+}
+
+### Submit an unknown service ID
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": [
+    "{{unknownServiceOfferingId}}"
+  ]
+}
+
+### Submit a service belonging to another Hall
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": [
+    "{{hallBWiFiId}}"
+  ]
+}
+
+### Submit a booking that overlaps 10:00-12:00
+# Expected: 409 Conflict after creating the first booking example.
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-05T11:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Start exactly when the 10:00-12:00 booking ends
+# Expected: 201 Created because booking intervals use [start, end).
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallAId}}",
+  "start": "2030-09-05T12:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### End exactly at closing time
+# Expected: 201 Created
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallCId}}",
+  "start": "2030-09-05T22:00:00+03:00",
+  "durationHours": 1,
+  "attendeeCount": 20,
+  "serviceOfferingIds": []
+}
+
+### Delete a Hall that has a booking
+# Expected: 409 Conflict after creating a Hall A booking.
+DELETE {{ConferenceRoomsApi_HostAddress}}/api/halls/{{hallAId}}
+
 ### Replace the created Hall details and services
 # Expected: 204 No Content
 PUT {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}

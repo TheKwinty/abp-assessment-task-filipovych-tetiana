@@ -1,6 +1,7 @@
 using ConferenceRooms.Api.Contracts.Halls;
 using ConferenceRooms.Core.Entities;
 using ConferenceRooms.Infrastructure.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConferenceRooms.Api.Services;
@@ -89,7 +90,7 @@ public sealed class HallService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(
+    public async Task<HallDeletionResult> DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
@@ -98,13 +99,30 @@ public sealed class HallService
 
         if (hall is null)
         {
-            return false;
+            return HallDeletionResult.NotFound;
+        }
+
+        if (await _dbContext.Bookings.AnyAsync(
+                booking => booking.HallId == id,
+                cancellationToken))
+        {
+            return HallDeletionResult.HasBookings;
         }
 
         _dbContext.Halls.Remove(hall);
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return true;
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception)
+            when (exception.GetBaseException() is SqlException { Number: 547 })
+        {
+            _dbContext.ChangeTracker.Clear();
+            return HallDeletionResult.HasBookings;
+        }
+
+        return HallDeletionResult.Deleted;
     }
 
     private static ServiceOffering CreateServiceOffering(
