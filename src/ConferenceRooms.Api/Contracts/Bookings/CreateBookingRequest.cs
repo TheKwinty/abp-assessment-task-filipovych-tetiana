@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ConferenceRooms.Api.Contracts.Bookings;
 
-public sealed class CreateBookingRequest
+public sealed class CreateBookingRequest : IValidatableObject
 {
     [Required]
     public Guid? HallId { get; init; }
@@ -20,4 +20,14 @@ public sealed class CreateBookingRequest
 
     [Required]
     public IReadOnlyList<Guid>? ServiceOfferingIds { get; init; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HallId == Guid.Empty)
+        {
+            yield return new ValidationResult(
+                "HallId must be a non-empty GUID.",
+                [nameof(HallId)]);
+        }
+    }
 }

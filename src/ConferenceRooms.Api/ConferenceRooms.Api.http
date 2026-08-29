@@ -125,6 +125,20 @@ Accept: application/json
   "serviceOfferingIds": []
 }
 
+### Submit an empty Hall ID
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "00000000-0000-0000-0000-000000000000",
+  "start": "2030-09-06T10:00:00+03:00",
+  "durationHours": 2,
+  "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
 ### Exceed Hall capacity
 # Expected: 400 Bad Request
 POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
