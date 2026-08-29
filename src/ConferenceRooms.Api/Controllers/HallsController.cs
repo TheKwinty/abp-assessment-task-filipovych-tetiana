@@ -9,10 +9,14 @@ namespace ConferenceRooms.Api.Controllers;
 public sealed class HallsController : ControllerBase
 {
     private readonly HallService _hallService;
+    private readonly HallAvailabilityService _hallAvailabilityService;
 
-    public HallsController(HallService hallService)
+    public HallsController(
+        HallService hallService,
+        HallAvailabilityService hallAvailabilityService)
     {
         _hallService = hallService;
+        _hallAvailabilityService = hallAvailabilityService;
     }
 
     [HttpGet]
@@ -26,6 +30,36 @@ public sealed class HallsController : ControllerBase
             .AsReadOnly();
 
         return Ok(response);
+    }
+
+    [HttpGet("available")]
+    public async Task<ActionResult<IReadOnlyList<HallResponse>>> GetAvailable(
+        [FromQuery] AvailabilitySearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _hallAvailabilityService.SearchAsync(
+            request,
+            cancellationToken);
+
+        if (result.Halls is not null)
+        {
+            var response = result.Halls
+                .Select(HallResponse.FromHall)
+                .ToList()
+                .AsReadOnly();
+
+            return Ok(response);
+        }
+
+        return result.Failure switch
+        {
+            HallAvailabilityFailure.InvalidTime => Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid availability search time.",
+                detail: "Search must be future, full-hour aligned, and within 06:00–23:00 on one day."),
+            _ => throw new InvalidOperationException(
+                $"Unsupported Hall availability failure: {result.Failure}."),
+        };
     }
 
     [HttpGet("{id:guid}")]
