@@ -48,6 +48,80 @@ GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
 Accept: application/json
 
 ###############################################################################
+# Hall availability API
+###############################################################################
+
+### Search availability for 20 attendees
+# Expected with no Bookings: 200 OK; Hall C, Hall A, Hall B.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2&capacity=20
+Accept: application/json
+
+### Search availability for 40 attendees
+# Expected with no Bookings: 200 OK; Hall A, Hall B.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search availability for 60 attendees
+# Expected with no Bookings: 200 OK; Hall B.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2&capacity=60
+Accept: application/json
+
+### Search availability above every Hall capacity
+# Expected: 200 OK with [].
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2&capacity=101
+Accept: application/json
+
+### Search with a past start
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2024-10-01T10:00:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search with a partial-hour start
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:30:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search before opening time
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T05:00:00%2B03:00&durationHours=1&capacity=40
+Accept: application/json
+
+### Search ending after closing time
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T22:00:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search ending exactly at closing time
+# Expected: 200 OK.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T22:00:00%2B03:00&durationHours=1&capacity=40
+Accept: application/json
+
+### Search with zero duration
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=0&capacity=40
+Accept: application/json
+
+### Search with zero capacity
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2&capacity=0
+Accept: application/json
+
+### Search missing required capacity
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2
+Accept: application/json
+
+### Search overlapping a temporary Hall A booking from 10:00 to 12:00
+# Expected after creating that Booking: 200 OK; Hall A excluded, Hall B remains.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T11:00:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search at the end boundary of a temporary Hall A booking from 10:00 to 12:00
+# Expected after creating that Booking: 200 OK; Hall A and Hall B included.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T12:00:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+###############################################################################
 # Booking API
 ###############################################################################
 

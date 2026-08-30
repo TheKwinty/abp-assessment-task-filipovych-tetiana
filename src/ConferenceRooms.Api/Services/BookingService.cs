@@ -2,6 +2,7 @@ using System.Data;
 using ConferenceRooms.Api.Contracts.Bookings;
 using ConferenceRooms.Core.Entities;
 using ConferenceRooms.Core.Pricing;
+using ConferenceRooms.Core.Scheduling;
 using ConferenceRooms.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -163,32 +164,14 @@ public sealed class BookingService
 
         if (request.Start is null
             || request.DurationHours is not int durationHours
-            || durationHours <= 0
-            || durationHours > 17
             || start <= _timeProvider.GetUtcNow()
-            || start.Ticks % TimeSpan.TicksPerHour != 0)
+            || !BookingTimeRules.TryCreateWindow(start, durationHours, out end))
         {
             return false;
         }
 
         duration = TimeSpan.FromHours(durationHours);
-
-        try
-        {
-            end = start.Add(duration);
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return false;
-        }
-
-        var openingTime = TimeSpan.FromHours(6);
-        var closingTime = TimeSpan.FromHours(23);
-
-        return start.TimeOfDay >= openingTime
-            && start.TimeOfDay < closingTime
-            && end.Date == start.Date
-            && end.TimeOfDay <= closingTime;
+        return true;
     }
 
     private static bool TrySelectServices(
