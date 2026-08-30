@@ -57,7 +57,7 @@ public sealed class BookingsController : ControllerBase
             BookingCreationFailure.InvalidTime => Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Invalid booking time.",
-                detail: "Booking must be future, full-hour aligned, and within 06:00–23:00 on one day."),
+                detail: "Booking must be future, aligned to a 30-minute boundary, and within 06:00–23:00 on one day."),
             BookingCreationFailure.InvalidServiceSelection => Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Invalid service selection.",

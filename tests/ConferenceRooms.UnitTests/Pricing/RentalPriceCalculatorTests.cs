@@ -89,10 +89,11 @@ public sealed class RentalPriceCalculatorTests
     }
 
     [Theory]
-    [InlineData(30, 0, 0L)]
-    [InlineData(0, 30, 0L)]
-    [InlineData(0, 0, 1L)]
-    public void Calculate_WhenStartIsNotHourAligned_ThrowsArgumentException(
+    [InlineData(15, 0, 0L)]
+    [InlineData(45, 0, 0L)]
+    [InlineData(30, 1, 0L)]
+    [InlineData(30, 0, 1L)]
+    public void Calculate_WhenStartIsNotThirtyMinuteAligned_ThrowsArgumentException(
         int minute,
         int second,
         long additionalTicks)
@@ -107,6 +108,21 @@ public sealed class RentalPriceCalculatorTests
                 start,
                 TimeSpan.FromHours(1),
                 Array.Empty<Guid>()));
+    }
+
+    [Fact]
+    public void Calculate_WhenBookingStartsAtHalfHour_SumsTariffSegments()
+    {
+        var calculator = new RentalPriceCalculator();
+        var hall = CreateHall(2000m);
+
+        var result = calculator.Calculate(
+            hall,
+            CreateStart(10, 30),
+            TimeSpan.FromHours(2),
+            Array.Empty<Guid>());
+
+        Assert.Equal(4150m, result);
     }
 
     [Theory]

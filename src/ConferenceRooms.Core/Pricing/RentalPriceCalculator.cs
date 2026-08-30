@@ -4,6 +4,8 @@ namespace ConferenceRooms.Core.Pricing;
 
 public sealed class RentalPriceCalculator
 {
+    private const long StartIntervalTicks = TimeSpan.TicksPerMinute * 30;
+
     private static readonly IReadOnlyList<TariffPeriod> TariffSchedule =
         Array.AsReadOnly<TariffPeriod>(
         [
@@ -33,9 +35,11 @@ public sealed class RentalPriceCalculator
             throw new ArgumentException("Duration must represent complete hours.", nameof(duration));
         }
 
-        if (start.TimeOfDay.Ticks % TimeSpan.TicksPerHour != 0)
+        if (start.TimeOfDay.Ticks % StartIntervalTicks != 0)
         {
-            throw new ArgumentException("Start must be aligned to a complete hour.", nameof(start));
+            throw new ArgumentException(
+                "Start must be aligned to a 30-minute boundary.",
+                nameof(start));
         }
 
         var startTime = TimeOnly.FromTimeSpan(start.TimeOfDay);

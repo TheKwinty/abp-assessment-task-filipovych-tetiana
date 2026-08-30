@@ -8,17 +8,24 @@ public sealed class BookingTimeRulesTests
         new(2030, 10, 1, 0, 0, 0, TimeSpan.FromHours(3));
 
     [Theory]
-    [InlineData(6, 1, 7)]
-    [InlineData(10, 2, 12)]
-    [InlineData(22, 1, 23)]
-    [InlineData(6, 17, 23)]
+    [InlineData(6, 0, 1, 7, 0)]
+    [InlineData(6, 30, 1, 7, 30)]
+    [InlineData(10, 0, 2, 12, 0)]
+    [InlineData(10, 30, 2, 12, 30)]
+    [InlineData(21, 30, 1, 22, 30)]
+    [InlineData(22, 0, 1, 23, 0)]
+    [InlineData(6, 0, 17, 23, 0)]
     public void TryCreateWindow_WithValidSchedule_ReturnsExpectedEnd(
         int startHour,
+        int startMinute,
         int durationHours,
-        int expectedEndHour)
+        int expectedEndHour,
+        int expectedEndMinute)
     {
-        var start = DefaultDate.AddHours(startHour);
-        var expectedEnd = DefaultDate.AddHours(expectedEndHour);
+        var start = DefaultDate.AddHours(startHour).AddMinutes(startMinute);
+        var expectedEnd = DefaultDate
+            .AddHours(expectedEndHour)
+            .AddMinutes(expectedEndMinute);
 
         var created = BookingTimeRules.TryCreateWindow(
             start,
@@ -55,32 +62,38 @@ public sealed class BookingTimeRulesTests
         Assert.False(created);
     }
 
-    [Fact]
-    public void TryCreateWindow_WithPartialHourStart_ReturnsFalse()
+    [Theory]
+    [InlineData(15, 0, 0L)]
+    [InlineData(45, 0, 0L)]
+    [InlineData(30, 1, 0L)]
+    [InlineData(30, 0, 1L)]
+    public void TryCreateWindow_WithStartOutsideThirtyMinuteBoundary_ReturnsFalse(
+        int minute,
+        int second,
+        long additionalTicks)
     {
-        var start = DefaultDate.AddHours(10).AddMinutes(30);
+        var start = DefaultDate
+            .AddHours(10)
+            .AddMinutes(minute)
+            .AddSeconds(second)
+            .AddTicks(additionalTicks);
 
         var created = BookingTimeRules.TryCreateWindow(start, 1, out _);
 
         Assert.False(created);
     }
 
-    [Fact]
-    public void TryCreateWindow_WithSubSecondStart_ReturnsFalse()
-    {
-        var start = DefaultDate.AddHours(10).AddTicks(1);
-
-        var created = BookingTimeRules.TryCreateWindow(start, 1, out _);
-
-        Assert.False(created);
-    }
-
-    [Fact]
-    public void TryCreateWindow_EndingAfterClosing_ReturnsFalse()
+    [Theory]
+    [InlineData(22, 0, 2)]
+    [InlineData(22, 30, 1)]
+    public void TryCreateWindow_EndingAfterClosing_ReturnsFalse(
+        int startHour,
+        int startMinute,
+        int durationHours)
     {
         var created = BookingTimeRules.TryCreateWindow(
-            DefaultDate.AddHours(22),
-            2,
+            DefaultDate.AddHours(startHour).AddMinutes(startMinute),
+            durationHours,
             out _);
 
         Assert.False(created);
