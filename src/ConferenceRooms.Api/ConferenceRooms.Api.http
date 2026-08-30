@@ -76,9 +76,14 @@ Accept: application/json
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2024-10-01T10:00:00%2B03:00&durationHours=2&capacity=40
 Accept: application/json
 
-### Search with a partial-hour start
-# Expected: 400 Bad Request.
+### Search from a half-hour boundary
+# Expected with no Bookings: 200 OK; Hall A, Hall B.
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:30:00%2B03:00&durationHours=2&capacity=40
+Accept: application/json
+
+### Search outside a 30-minute boundary
+# Expected: 400 Bad Request.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:15:00%2B03:00&durationHours=2&capacity=40
 Accept: application/json
 
 ### Search before opening time
@@ -96,6 +101,11 @@ Accept: application/json
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T22:00:00%2B03:00&durationHours=1&capacity=40
 Accept: application/json
 
+### Search from 22:30 for one hour
+# Expected: 400 Bad Request because the interval ends after closing time.
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T22:30:00%2B03:00&durationHours=1&capacity=40
+Accept: application/json
+
 ### Search with zero duration
 # Expected: 400 Bad Request.
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=0&capacity=40
@@ -111,14 +121,14 @@ Accept: application/json
 GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T10:00:00%2B03:00&durationHours=2
 Accept: application/json
 
-### Search overlapping a temporary Hall A booking from 10:00 to 12:00
+### Search overlapping a temporary Hall A booking from 10:30 to 12:30
 # Expected after creating that Booking: 200 OK; Hall A excluded, Hall B remains.
-GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T11:00:00%2B03:00&durationHours=2&capacity=40
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T11:00:00%2B03:00&durationHours=1&capacity=40
 Accept: application/json
 
-### Search at the end boundary of a temporary Hall A booking from 10:00 to 12:00
+### Search at the end boundary of a temporary Hall A booking from 10:30 to 12:30
 # Expected after creating that Booking: 200 OK; Hall A and Hall B included.
-GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T12:00:00%2B03:00&durationHours=2&capacity=40
+GET {{ConferenceRoomsApi_HostAddress}}/api/halls/available?start=2030-10-01T12:30:00%2B03:00&durationHours=1&capacity=40
 Accept: application/json
 
 ###############################################################################
@@ -136,14 +146,14 @@ Accept: application/json
 @createdBookingId = 00000000-0000-0000-0000-000000000000
 
 ### Create a booking without services
-# Expected: 201 Created
+# Expected: 201 Created with start 10:30, end 12:30, and total price 4150.00.
 POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
 Content-Type: application/json
 Accept: application/json
 
 {
   "hallId": "{{hallAId}}",
-  "start": "2030-09-05T10:00:00+03:00",
+  "start": "2030-09-05T10:30:00+03:00",
   "durationHours": 2,
   "attendeeCount": 40,
   "serviceOfferingIds": []
@@ -241,7 +251,7 @@ Accept: application/json
   "serviceOfferingIds": []
 }
 
-### Submit a booking that is not full-hour aligned
+### Submit a booking outside a 30-minute boundary
 # Expected: 400 Bad Request
 POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
 Content-Type: application/json
@@ -249,7 +259,7 @@ Accept: application/json
 
 {
   "hallId": "{{hallAId}}",
-  "start": "2030-09-06T10:30:00+03:00",
+  "start": "2030-09-06T10:15:00+03:00",
   "durationHours": 2,
   "attendeeCount": 40,
   "serviceOfferingIds": []
@@ -280,6 +290,20 @@ Accept: application/json
   "start": "2030-09-06T22:00:00+03:00",
   "durationHours": 2,
   "attendeeCount": 40,
+  "serviceOfferingIds": []
+}
+
+### Submit a 22:30 booking that ends after closing time
+# Expected: 400 Bad Request
+POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hallId": "{{hallCId}}",
+  "start": "2030-09-06T22:30:00+03:00",
+  "durationHours": 1,
+  "attendeeCount": 20,
   "serviceOfferingIds": []
 }
 
@@ -332,7 +356,7 @@ Accept: application/json
   ]
 }
 
-### Submit a booking that overlaps 10:00-12:00
+### Submit a booking that overlaps 10:30-12:30
 # Expected: 409 Conflict after creating the first booking example.
 POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
 Content-Type: application/json
@@ -346,7 +370,7 @@ Accept: application/json
   "serviceOfferingIds": []
 }
 
-### Start exactly when the 10:00-12:00 booking ends
+### Start exactly when the 10:30-12:30 booking ends
 # Expected: 201 Created because booking intervals use [start, end).
 POST {{ConferenceRoomsApi_HostAddress}}/api/bookings
 Content-Type: application/json
@@ -354,7 +378,7 @@ Accept: application/json
 
 {
   "hallId": "{{hallAId}}",
-  "start": "2030-09-05T12:00:00+03:00",
+  "start": "2030-09-05T12:30:00+03:00",
   "durationHours": 2,
   "attendeeCount": 40,
   "serviceOfferingIds": []

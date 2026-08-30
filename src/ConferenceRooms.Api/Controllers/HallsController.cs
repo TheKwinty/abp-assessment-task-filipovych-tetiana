@@ -56,7 +56,7 @@ public sealed class HallsController : ControllerBase
             HallAvailabilityFailure.InvalidTime => Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Invalid availability search time.",
-                detail: "Search must be future, full-hour aligned, and within 06:00–23:00 on one day."),
+                detail: "Search must be future, aligned to a 30-minute boundary, and within 06:00–23:00 on one day."),
             _ => throw new InvalidOperationException(
                 $"Unsupported Hall availability failure: {result.Failure}."),
         };
