@@ -27,6 +27,14 @@ builder.Services.AddScoped<BookingReportService>();
 builder.Services.AddSingleton<RentalPriceCalculator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options => options.SwaggerDoc("v1", new()
+{
+    Title = "Conference Rooms API",
+    Version = "v1",
+    Description = "Conference hall management, availability search, booking, "
+        + "pricing and booking analytics API.",
+}));
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicyName, policy =>
 {
     var allowedOrigins = builder.Configuration
@@ -91,6 +99,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors(CorsPolicyName);
 app.UseRateLimiter();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 

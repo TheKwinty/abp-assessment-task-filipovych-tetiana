@@ -48,6 +48,46 @@ GET {{ConferenceRoomsApi_HostAddress}}/api/halls/{{createdHallId}}
 Accept: application/json
 
 ###############################################################################
+# Booking reports API
+###############################################################################
+
+### Get a booking summary
+# Expected: 200 OK. A Booking is included when StartAt is in [from, to).
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-10-01T06:00:00%2B03:00&to=2030-10-02T06:00:00%2B03:00
+Accept: application/json
+
+### Get an empty booking summary
+# Expected with no matching Bookings: 200 OK with totalBookings 0, totalRevenue 0, and halls [].
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-11-01T06:00:00%2B02:00&to=2030-11-02T06:00:00%2B02:00
+Accept: application/json
+
+### Omit the report start
+# Expected: 400 ValidationProblemDetails.
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?to=2030-10-02T06:00:00%2B03:00
+Accept: application/json
+
+### Omit the report end
+# Expected: 400 ValidationProblemDetails.
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-10-01T06:00:00%2B03:00
+Accept: application/json
+
+### Use equal report boundaries
+# Expected: 400 ValidationProblemDetails because from must be earlier than to.
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-10-01T06:00:00%2B03:00&to=2030-10-01T06:00:00%2B03:00
+Accept: application/json
+
+### Use reversed report boundaries
+# Expected: 400 ValidationProblemDetails because from must be earlier than to.
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-10-02T06:00:00%2B03:00&to=2030-10-01T06:00:00%2B03:00
+Accept: application/json
+
+### Verify half-open report boundaries
+# A Booking with StartAt == from is included; a Booking with StartAt == to is excluded.
+# Expected after creating the Task 10 boundary examples: 3 Bookings, excluding Hall C at exactly to.
+GET {{ConferenceRoomsApi_HostAddress}}/api/reports/bookings-summary?from=2030-10-01T06:00:00%2B03:00&to=2030-10-02T06:00:00%2B03:00
+Accept: application/json
+
+###############################################################################
 # Hall availability API
 ###############################################################################
 

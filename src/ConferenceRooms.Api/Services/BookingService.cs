@@ -71,6 +71,8 @@ public sealed class BookingService
         CreateBookingRequest request,
         CancellationToken cancellationToken)
     {
+        // Serializable keeps the overlap check and insert in one transaction so
+        // concurrent requests cannot both reserve the same Hall and time window.
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);

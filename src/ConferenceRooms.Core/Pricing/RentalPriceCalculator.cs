@@ -62,6 +62,8 @@ public sealed class RentalPriceCalculator
             selectedServiceOfferingIds);
         var hallTimeSubtotal = 0m;
 
+        // Each half-open tariff segment contributes only its overlapping duration,
+        // which prorates bookings that cross one or more tariff boundaries.
         foreach (var tariffPeriod in TariffSchedule)
         {
             var tariffStart = CreateBoundary(start, tariffPeriod.Start);
