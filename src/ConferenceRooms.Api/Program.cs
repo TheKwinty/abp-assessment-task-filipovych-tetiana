@@ -23,6 +23,7 @@ builder.Services.AddDbContext<ConferenceRoomsDbContext>(options =>
 builder.Services.AddScoped<HallService>();
 builder.Services.AddScoped<HallAvailabilityService>();
 builder.Services.AddScoped<BookingService>();
+builder.Services.AddScoped<BookingReportService>();
 builder.Services.AddSingleton<RentalPriceCalculator>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddControllers();
